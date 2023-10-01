@@ -6,7 +6,7 @@ import retrofit2.http.Query
 interface CurrencyApi {
     @GET("vi/latest")
     suspend fun getLatestRates(
-        @Query("apikey") apiKey: String
+        @Query("apiKey") apiKey: String
     )
 
     companion object {

@@ -1,6 +1,6 @@
-package com.example.currencyconverter.data.remote
+package com.example.currencyconverter.data.remote.dto
 
-data class Data(
+data class CurrencyDataDto(
     val AUD: Double,
     val BGN: Double,
     val BRL: Double,
@@ -32,6 +32,6 @@ data class Data(
     val SGD: Double,
     val THB: Double,
     val TRY: Double,
-    val USD: Int,
+    val USD: Double,
     val ZAR: Double
 )

@@ -39,6 +39,7 @@ object AppModule {
                 CurrencyRateDatabase::class.java,
                 "currency_db"
             )
+            .fallbackToDestructiveMigration()
             .build()
     }
 

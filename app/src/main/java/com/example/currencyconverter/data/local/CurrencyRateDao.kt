@@ -10,6 +10,6 @@ interface CurrencyRateDao {
     @Upsert
     suspend fun upsertAll(currencyRates: List<CurrencyRateEntity>)
 
-    @Query("SELECT * FROM currencyRates")
+    @Query("SELECT * FROM currencyrateentity")
     suspend fun getAllCurrencyRates(): List<CurrencyRateEntity>
 }

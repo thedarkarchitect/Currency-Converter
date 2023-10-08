@@ -1,18 +1,19 @@
 package com.example.currencyconverter.presentation.main_screen
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.currencyconverter.domain.model.Resource
 import com.example.currencyconverter.domain.repository.CurrencyRepository
-import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import javax.inject.Inject
 
-@AndroidEntryPoint
+@HiltViewModel
 class MainScreenViewModel @Inject constructor(
     private val repository: CurrencyRepository
 ): ViewModel() {
@@ -26,7 +27,12 @@ class MainScreenViewModel @Inject constructor(
     fun onEvent(event: MainScreenEvent) {
         when(event){
             is MainScreenEvent.BottomSheetItemClicked -> {
-
+                if (state.selection == SelectionState.FROM) {
+                    state = state.copy(fromCurrencyCode = event.value)
+                } else if (state.selection == SelectionState.TO) {
+                    state = state.copy(toCurrencyCode = event.value)
+                }
+                updateCurrencyValue("")
             }
             MainScreenEvent.FromCurrencySelect -> {
                 state = state.copy(
@@ -58,18 +64,19 @@ class MainScreenViewModel @Inject constructor(
             repository
                 .getCurrencyRatesList()
                 .collectLatest { result ->
-                    when(result) {
+                    state = when(result) {
                         is Resource.Error -> {
-                            state = state.copy(
-//                                then we update the currency rates
+                            state.copy(
+                //                                then we update the currency rates
                                 currencyRates = result.data?.associateBy { it.code } ?: emptyMap(), //this will use the code as a key to get current currency rate
-                                error = null
+                                error = result.message
                             )
                         }
+
                         is Resource.Success -> {
-                            state = state.copy(
+                            state.copy(
                                 currencyRates = result.data?.associateBy { it.code } ?: emptyMap(),
-                                error = result.message
+                                error = null
                             )
                         }
                     }
@@ -95,7 +102,7 @@ class MainScreenViewModel @Inject constructor(
         when(state.selection) {
             SelectionState.FROM -> {
                 val fromValue = updatedCurrencyValue.toDoubleOrNull() ?: 0.0
-                val toValue = fromValue / fromCurrencyRate + toCurrencyRate
+                val toValue = fromValue / fromCurrencyRate * toCurrencyRate
                 state = state.copy(
                     fromCurrencyValue = updatedCurrencyValue,
                     toCurrencyValue = numberFormat.format(toValue)
@@ -103,7 +110,7 @@ class MainScreenViewModel @Inject constructor(
             }
             SelectionState.TO ->  {
                 val toValue = updatedCurrencyValue.toDoubleOrNull() ?: 0.0
-                val fromValue = toValue / fromCurrencyRate + toCurrencyRate
+                val fromValue = toValue / fromCurrencyRate * fromCurrencyRate
                 state = state.copy(
                     toCurrencyValue = updatedCurrencyValue,
                     fromCurrencyValue = numberFormat.format(fromValue)
@@ -111,5 +118,4 @@ class MainScreenViewModel @Inject constructor(
             }
         }
     }
-
 }

@@ -23,12 +23,16 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -46,8 +50,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.currencyconverter.R
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.ui.ExperimentalComposeUiApi
+import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,15 +73,42 @@ fun MainScreen(
     }
 
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState()
     var shouldBottomSheetShow by remember { mutableStateOf(false) }
 
     if(shouldBottomSheetShow) {
         ModalBottomSheet(
-            onDismissRequest = { shouldBottomSheetShow = false }
-        ){
-
-        }
+            sheetState = sheetState,
+            onDismissRequest = { shouldBottomSheetShow = false },
+            dragHandle = {
+                Column(
+                    modifier = modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    BottomSheetDefaults.DragHandle()
+                    Text(
+                        text = "Select Currency",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Divider()
+                }
+            },
+            content = {
+                BottomSheetContent(
+                    onItemClicked = { currencyCode ->
+                        onEvent(MainScreenEvent.BottomSheetItemClicked(currencyCode))
+                        scope.launch {
+                            sheetState.hide()
+                        }.invokeOnCompletion {
+                            if(!sheetState.isVisible) shouldBottomSheetShow = false
+                        }
+                    },
+                    currenciesList = state.currencyRates.values.toList()
+                )
+            }
+        )
     }
 
     Column(
@@ -112,7 +143,10 @@ fun MainScreen(
                             modifier = modifier.fillMaxWidth(),
                             currencyCode = state.fromCurrencyCode,
                             currencyName = state.currencyRates[state.fromCurrencyCode]?.name ?: "",
-                            onDropDownIconClicked = {}
+                            onDropDownIconClicked = {
+                                shouldBottomSheetShow = true
+                                onEvent(MainScreenEvent.FromCurrencySelect)
+                            }
                         )
                         Text(
                             text = state.fromCurrencyValue,
@@ -154,7 +188,10 @@ fun MainScreen(
                             modifier = modifier.fillMaxWidth(),
                             currencyCode = state.toCurrencyCode,
                             currencyName = state.currencyRates[state.toCurrencyCode]?.name ?: "",
-                            onDropDownIconClicked = {}
+                            onDropDownIconClicked = {
+                                shouldBottomSheetShow = true
+                                onEvent(MainScreenEvent.ToCurrencySelect)
+                            }
                         )
                     }
                 }

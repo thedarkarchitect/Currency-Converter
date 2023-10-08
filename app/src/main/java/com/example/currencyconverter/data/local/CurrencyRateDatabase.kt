@@ -6,7 +6,7 @@ import com.example.currencyconverter.data.local.entity.CurrencyRateEntity
 
 @Database(
     entities = [CurrencyRateEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class CurrencyRateDatabase : RoomDatabase() {
